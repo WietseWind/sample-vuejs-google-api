@@ -9,6 +9,7 @@ More on Vue:
 # Setup
 
 - Get a Webapp client id from the [Google API Console](https://console.cloud.google.com/apis/credentials)
+- Make sure your local development url and production url are added to the authorized Javascript soruces; eg. `http://localhost:8080` (Vue Webpack default)
 - Make sure you have the [**Drive**](https://console.cloud.google.com/apis/library/drive.googleapis.com/?q=drive) and [**Calendar**](https://console.cloud.google.com/apis/library/calendar-json.googleapis.com/?q=calendar) libs enabled in the Google API Console
 - Put it at [line 34 in `src/App.vue`](https://github.com/WietseWind/sample-vuejs-google-api/blob/master/src/App.vue#L34)
 
