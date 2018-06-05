@@ -1,6 +1,10 @@
-# google-dashboard
+# Google API with VueJS
 
-> Google Dashboard
+
+Google API (Drive, Calendar) with window.fetch and VueJS (Sample)
+
+More on Vue:
+[https://xrpcommunity.blog/develop-awesome-webapps-using-vuejs-webpack-demonstrating-by-building-a-xrp-ledger-integration/](https://xrpcommunity.blog/develop-awesome-webapps-using-vuejs-webpack-demonstrating-by-building-a-xrp-ledger-integration/)
 
 ## Build Setup
 
@@ -17,5 +21,3 @@ npm run build
 # build for production and view the bundle analyzer report
 npm run build --report
 ```
-
-For a detailed explanation on how things work, check out the [guide](http://vuejs-templates.github.io/webpack/) and [docs for vue-loader](http://vuejs.github.io/vue-loader).
