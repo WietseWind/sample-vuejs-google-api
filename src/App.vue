@@ -284,7 +284,6 @@ export default {
             overflow: hidden;
 
             div.card-body {
-              border: 1px solid red;
               max-height: 100%;
               overflow: auto;
               -webkit-overflow-scrolling: auto;
