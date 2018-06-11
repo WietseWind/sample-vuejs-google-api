@@ -9,8 +9,9 @@
               <b>Calendar</b>
             </div>
             <div class="card-body">
-              <p v-if="Object.keys(googleResponse.calendar).length < 1" class="alert text-center text-primary">Loading...</p>
-              <pre>{{ googleResponse.calendar }}</pre>
+              <!-- <p v-if="Object.keys(googleResponse.calendar).length < 1" class="alert text-center text-primary">Loading...</p> -->
+              <!-- <pre>{{ googleResponse.calendar }}</pre> -->
+              <p class="alert alert-warning text-center">Not ready yet.</p>
             </div>
           </div>
         </div>
@@ -40,7 +41,13 @@
                 No files in this folder.
               </div>
               <ul class="list-unstyled" v-if="googleResponse.drive.files && googleResponse.drive.files.length > 0">
-                <li v-for="f in googleResponse.drive.files" v-bind:key="f.id"><a target="_blank" :href="'https://drive.google.com/open?id=' + f.id">{{ f.name }}</a></li>
+                <li v-for="f in googleResponse.drive.files" v-bind:key="f.id">
+                  <img :src="f.iconLink" class="fileicon" />
+                  <a target="_blank" :href="f.webViewLink">
+                    {{ f.name }}
+                    <small class="text-muted float-right">{{ f.owners[0].displayName }}</small>
+                  </a>
+                </li>
               </ul>
               <!-- <pre>{{ googleResponse.drive.files }}</pre> -->
             </div>
@@ -52,8 +59,23 @@
               <b>Search files</b>
             </div>
             <div class="card-body">
-              <p v-if="Object.keys(googleResponse.search.results).length < 1 && googleResponse.search.searching" class="alert text-center text-primary">Loading...</p>
-              <pre>{{ googleResponse.search.results }}</pre>
+              <label for="src"><small><b>Search</b></small></label><br />
+              <input :disabled="isSearching" type="text" v-on:keyup.enter="search" v-model="searchQuery" class="input-lg form-control form-control-lg" placeholder="Query..." />
+              <br />
+              <p v-if="isSearching && Object.keys(googleResponse.search).length < 1" class="alert text-center text-primary">Loading...</p>
+              <div class="alert alert-warning text-center" v-if="!isSearching && googleResponse.search.files && googleResponse.search.files.length < 1">
+                No files in this folder.
+              </div>
+              <ul class="list-unstyled" v-if="!isSearching && googleResponse.search.files && googleResponse.search.files.length > 0">
+                <li v-for="f in googleResponse.search.files" v-bind:key="f.id">
+                  <img :src="f.iconLink" class="fileicon" />
+                  <a target="_blank" :href="f.webViewLink">
+                    {{ f.name }}
+                    <small class="text-muted float-right">{{ f.owners[0].displayName }}</small>
+                  </a>
+                </li>
+              </ul>
+              <!-- <pre>{{ googleResponse.search.files }}</pre> -->
             </div>
           </div>
         </div>
@@ -64,7 +86,19 @@
             </div>
             <div class="card-body">
               <p v-if="Object.keys(googleResponse.recent).length < 1" class="alert text-center text-primary">Loading...</p>
-              <pre>{{ googleResponse.recent }}</pre>
+              <div class="alert alert-warning text-center" v-if="googleResponse.recent.files && googleResponse.recent.files.length < 1">
+                No files in this folder.
+              </div>
+              <ul class="list-unstyled" v-if="googleResponse.recent.files && googleResponse.recent.files.length > 0">
+                <li v-for="f in googleResponse.recent.files" v-bind:key="f.id">
+                  <img :src="f.iconLink" class="fileicon" />
+                  <a target="_blank" :href="f.webViewLink">
+                    {{ f.name }}
+                    <small class="text-muted float-right">{{ f.owners[0].displayName }}</small>
+                  </a>
+                </li>
+              </ul>
+              <!-- <pre>{{ googleResponse.recent.files }}</pre> -->
             </div>
           </div>
         </div>
@@ -107,6 +141,8 @@ export default {
   components: {},
   data () {
     return {
+      searchQuery: '',
+      isSearching: false,
       googleData: {
         profile: {},
         auth: {},
@@ -120,11 +156,7 @@ export default {
       googleResponse: {
         drive: {},
         recent: {},
-        search: {
-          query: '',
-          searching: false,
-          results: {}
-        },
+        search: {},
         calendar: {}
       }
     }
@@ -186,9 +218,20 @@ export default {
         }
       })
     },
+    search () {
+      this.isSearching = true
+      let qDrive = 'https://www.googleapis.com/drive/v3/files?fields=*&q=' + encodeURIComponent(`name contains '${this.searchQuery}' or fullText contains '${this.searchQuery}'`)
+      // qDrive += encodeURI(`mimeType = 'application/vnd.google-apps.folder'`)
+      this.callGoogle(qDrive).then(d => {
+        this.googleResponse.search = d
+        this.isSearching = false
+      }).catch(e => {
+        this.isSearching = false
+      })
+    },
     getRaFolderContents () {
       if (this.googleData.readAheadFolder.name !== '') {
-        let qDrive = 'https://www.googleapis.com/drive/v3/files?orderBy=viewedByMeTime&q=' + encodeURIComponent(`'${this.googleData.readAheadFolder.id}' in parents and mimeType != 'application/vnd.google-apps.folder'`)
+        let qDrive = 'https://www.googleapis.com/drive/v3/files?fields=*&orderBy=viewedByMeTime&q=' + encodeURIComponent(`'${this.googleData.readAheadFolder.id}' in parents and mimeType != 'application/vnd.google-apps.folder'`)
         // qDrive += encodeURI(`mimeType = 'application/vnd.google-apps.folder'`)
         this.callGoogle(qDrive).then(d => {
           this.googleResponse.drive = d
@@ -217,6 +260,12 @@ export default {
       } else {
         this.loadRaFolders()
       }
+
+      let qDrive = 'https://www.googleapis.com/drive/v3/files?fields=*&orderBy=recency%20desc,modifiedTime%20desc&pageSize=50'
+      // qDrive += encodeURI(`mimeType = 'application/vnd.google-apps.folder'`)
+      this.callGoogle(qDrive).then(d => {
+        this.googleResponse.recent = d
+      }).catch(e => {})
 
       // let qDrive = 'https://www.googleapis.com/drive/v3/files?orderBy=viewedByMeTime&q='
       // qDrive += encodeURI(`mimeType = 'application/vnd.google-apps.folder'`)
@@ -264,6 +313,10 @@ export default {
     min-height: 100vh;
 
     a { cursor: pointer; }
+    img.fileicon {
+      max-height: 15px; max-width: 15px; display: inline-block;
+      margin-top: -2px; margin-right: 6px;
+    }
 
     &.container-fluid {
       padding: 0;
